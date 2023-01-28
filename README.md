@@ -1,5 +1,5 @@
-# LightGraph
-LightGraph AllSky module
+# LightGraph ![https://www.paypal.com/donate/?hosted_button_id=ZTEN6YGU2E7QC](https://www.paypalobjects.com/en_GB/i/btn/btn_donate_SM.gif)
+LightGraph AllSky module <input type="image" src="https://www.paypalobjects.com/en_GB/i/btn/btn_donate_SM.gif" border="0" name="submit" title="PayPal - The safer, easier way to pay online!" alt="Donate with PayPal button" />
 
 LightGraph is a AllSky module that overlays on the image captured a graph displaying lightness and darkeness for the day (see below, for what a 'day' means).
 
