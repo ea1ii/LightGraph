@@ -29,7 +29,7 @@ metaData = {
         "day"
     ],
     "experimental": "true",
-    "version": "v0.1",
+    "version": "v0.2",
     "module": "allsky_lightgraph",
     "arguments": {
         "night_border_color": "30 190 40",
@@ -47,6 +47,17 @@ metaData = {
         "hour_ticks": "true",
         "hour_nums": "true",
         "now_point": "Center",
+        "draw_elev": "true",
+        "elev_night_color": "30 190 40",
+        "elev_day_color": "15 110 20",
+        "sun_night_color": "85 205 235",
+        "moon_night_color": "230 200 95",
+        "sun_day_color": "8 11 137",
+        "moon_day_color": "85 70 15", 
+        "elev_horiz_pos": 750,
+        "elev_vert_pos": 10,
+        "elev_width": 300,
+        "elev_height": 100,
         "debug": "False"
     },
     "argumentdetails": {
@@ -169,7 +180,7 @@ metaData = {
             }
         },
         "hour_ticks": {
-            "required": "true",
+            "required": "false",
             "description": "Visible hour tickmarks",
             "help": "",
             "type": {
@@ -177,7 +188,7 @@ metaData = {
             }
         },
         "hour_nums": {
-            "required": "true",
+            "required": "false",
             "description": "Visible hour numbers",
             "help": "Might decrease frquency if too compact",
             "type": {
@@ -191,6 +202,117 @@ metaData = {
             "type": {
                 "fieldtype": "select",
                 "values": "Center, Left"
+            }
+        },
+        "draw_elev": {
+            "required": "false",
+            "description": "Draw elevation chart",
+            "help": "",
+            "tab": "Elevation",
+            "type": {
+                "fieldtype": "checkbox"
+            }
+        },
+        "elev_night_color": {
+            "required": "true",
+            "description": "Elevation border color in night images",
+            "help": "BGR format",
+            "tab": "Elevation",
+            "type": {
+                "fieldtype": ""
+            }
+        },
+        "elev_day_color": {
+            "required": "true",
+            "description": "Elevation border color in day images",
+            "help": "BGR format",
+            "tab": "Elevation",
+            "type": {
+                "fieldtype": ""
+            }
+        },
+        "sun_night_color": {
+            "required": "true",
+            "description": "Sun color in night images",
+            "help": "BGR format",
+            "tab": "Elevation",
+            "type": {
+                "fieldtype": ""
+            }
+        },
+        "moon_night_color": {
+            "required": "true",
+            "description": "Moon color in night images",
+            "help": "BGR format",
+            "tab": "Elevation",
+            "type": {
+                "fieldtype": ""
+            }
+        },
+        "sun_day_color": {
+            "required": "true",
+            "description": "Sun color in day images",
+            "help": "BGR format",
+            "tab": "Elevation",
+            "type": {
+                "fieldtype": ""
+            }
+        },
+        "moon_day_color": {
+            "required": "true",
+            "description": "Moon color in day images",
+            "help": "BGR format",
+            "tab": "Elevation",
+            "type": {
+                "fieldtype": ""
+            }
+        },
+        "elev_width": {
+            "required": "true",
+            "description": "Width",
+            "help": "Total with for the graph",
+            "tab": "Elevation",
+            "type": {
+                "fieldtype": "spinner",
+                "min": 200,
+                "max": 2000,
+                "step": 1
+            }
+        },
+        "elev_height": {
+            "required": "true",
+            "description": "Height",
+            "help": "Total height for the graph",
+            "tab": "Elevation",
+            "type": {
+                "fieldtype": "spinner",
+                "min": 200,
+                "max": 2000,
+                "step": 1
+            }
+        },
+        "elev_horiz_pos": {
+            "required": "true",
+            "description": "Left border position in px",
+            "help": "",
+            "tab": "Elevation",
+            "type": {
+                "fieldtype": "spinner",
+                "min": 0,
+                "max": 2000,
+                "step": 1
+            }
+        },
+        "elev_vert_pos": {
+            "required": "true",
+            "description": "Top border position in px",
+            "tab": "Elevation",
+            "help": "",
+            "type": {
+                "fieldtype": "spinner",
+                "min": 0,
+                "max": 2000,
+                "step": 1
             }
         },
         "debug": {
@@ -210,12 +332,16 @@ class lGraph():
 
     border_color = light_color = dark_color = None
     day2civil_color = civil2nauti_color = nauti2astro_color = None
+    elev_color = sun_solor = moon_color = None
     latitude = longitude = 0
     graph_X = graph_Y = graph_width = graph_height = 0
+    elev_X = elev_Y = elev_width = elev_height = 0
+    npoints = res = 0
     startTime = finishTime = nowTime = datetime.datetime.utcnow()
     midnight = noon = None
     location = None
     timeArray = []
+    sunPath = moonPath = []
 
     def _readColor(self, input):
         return tuple(int(item) for item in input.split(' '))
@@ -241,6 +367,16 @@ class lGraph():
         self.latitude = s.convertLatLon(s.getSetting("latitude"))
         self.longitude = s.convertLatLon(s.getSetting("longitude"))
 
+        if params["draw_elev"] == True:
+            if isDay == "DAY":
+                self.elev_color = self._readColor(params["elev_day_color"])
+                self.sun_color = self._readColor(params["sun_day_color"])
+                self.moon_color = self._readColor(params["moon_day_color"])
+            else:
+                self.elev_color = self._readColor(params["elev_night_color"])
+                self.sun_color = self._readColor(params["sun_night_color"])
+                self.moon_color = self._readColor(params["moon_night_color"])
+                
     def set_size(self, debug, params):
         self.image_width = s.image.shape[1]
         self.image_height = s.image.shape[0]
@@ -273,6 +409,20 @@ class lGraph():
             self.graph_Y = 10
             if debug:
                 s.log(1,"Y adjusted")
+
+        if params["draw_elev"] == True:
+            self.elev_width = int(params["elev_width"])
+            self.elev_height = int(params["elev_height"])
+            self.elev_X = int(params["elev_horiz_pos"])
+            self.elev_Y = int(params["elev_vert_pos"])
+            if self.elev_width > self.image_width:
+                self.elev_width = int(self.image_width / 4)
+            if self.elev_height > self.image_height:
+                self.elev_height = int(self.image_height / 4)
+            if (self.elev_X + self.elev_width) > self.image_width:
+                self.elev_X = self.image_width - self.elev_width
+            if (self.elev_Y + self.elev_height) > self.image_height:
+                self.elev_Y = self.image_height - self.elev_height            
 
     def set_time(self, debug, params):
 
@@ -447,6 +597,21 @@ class lGraph():
                 self.midnight = moment
                 self.timeArray.remove(moment)     
 
+    def calSunMoon(self, params):
+        k = 3
+        self.npoints = int(self.elev_width / k) + 1
+        self.res = self.elev_width / self.npoints
+        delta_t = 24.0 * 3600.0 / self.npoints
+        sun = ephem.Sun()
+        moon = ephem.Moon()
+        for x in range(self.npoints + 1):
+            xt = self.startTime + datetime.timedelta(seconds=x * delta_t)
+            self.location.date = ephem.Date(xt)
+            sun.compute(self.location)
+            self.sunPath = self.sunPath + [(x * self.res, int(degrees(sun.alt) / 90.0 * self.elev_height / 2.0))]
+            moon.compute(self.location)
+            self.moonPath = self.moonPath + [(x * self.res, int(degrees(moon.alt) / 90.0 * self.elev_height / 2.0))]
+
     def _azMidDarkness(self, dt1, dt2):
         tdelta = (dt2 - dt1).total_seconds()
         tmid = dt1 + datetime.timedelta(seconds=tdelta/2)
@@ -541,20 +706,73 @@ class lGraph():
         tri = np.array([[xx, self.graph_Y + self.graph_height - 8], [xx - 5, self.graph_Y + self.graph_height], [xx + 5, self.graph_Y + self.graph_height]])
         cv2.fillPoly(img=canvas, pts=[tri], color=self.border_color)
 
+        #elev chart
+        if params["draw_elev"] == True:
+            # box
+            cv2.rectangle(img=canvas, pt1=(self.elev_X, self.elev_Y), \
+                pt2=(self.elev_X + self.elev_width, self.elev_Y + self.elev_height), \
+                thickness=1, color=self.elev_color)
+            cv2.line(img=canvas, pt1=(self.elev_X, self.elev_Y + int(self.elev_height / 2)), \
+                                pt2=(self.elev_X + self.elev_width, self.elev_Y + int(self.elev_height / 2)), thickness=2, color=self.elev_color)
+            TROPIC = 23.5
+            POLAR = 66.5
+            cv2.line(img=canvas, pt1=(self.elev_X, self.elev_Y + int(self.elev_height / 2 - POLAR * self.elev_height / 180.0)), \
+                                pt2=(self.elev_X + self.elev_width, self.elev_Y + int(self.elev_height / 2 - POLAR * self.elev_height / 180.0)), thickness=1, color=self.elev_color)
+            cv2.line(img=canvas, pt1=(self.elev_X, self.elev_Y + int(self.elev_height / 2 - TROPIC * self.elev_height / 180.0)), \
+                                pt2=(self.elev_X + self.elev_width, self.elev_Y + int(self.elev_height / 2 - TROPIC * self.elev_height / 180.0)), thickness=1, color=self.elev_color)
+            cv2.line(img=canvas, pt1=(self.elev_X, self.elev_Y + int(self.elev_height / 2 + POLAR * self.elev_height / 180.0)), \
+                                pt2=(self.elev_X + self.elev_width, self.elev_Y + int(self.elev_height / 2 + POLAR * self.elev_height / 180.0)), thickness=1, color=self.elev_color)
+            cv2.line(img=canvas, pt1=(self.elev_X, self.elev_Y + int(self.elev_height / 2 + TROPIC * self.elev_height / 180.0)), \
+                                pt2=(self.elev_X + self.elev_width, self.elev_Y + int(self.elev_height / 2 + TROPIC * self.elev_height / 180.0)), thickness=1, color=self.elev_color)
+            
+            # hours
+            xx = (tt - self.startTime).total_seconds() / 3600.0 / 24.0 * self.elev_width + self.elev_X
+            hourdelta = self.elev_width / 24.0
+            yy = self.elev_Y
+            h = tt.hour               
+            for x in range(25):
+                xxx = int(xx + x * hourdelta)
+                if xxx > self.elev_X and xxx < self.elev_X + self.elev_width:
+                    cv2.line(img=canvas, pt1=(xxx, self.elev_Y), pt2=(xxx, self.elev_Y + self.elev_height), thickness=1, color=self.elev_color)
+                h = h + 1
+                if h == 24:
+                    h = 0
 
+            # mark
+            if params["now_point"] == "Center":
+                xx = self.elev_X+ int(self.elev_width / 2)
+            else:
+                xx = self.elev_X 
+            cv2.line(img=canvas, pt1=(xx, self.elev_Y), pt2=(xx, self.elev_Y + self.elev_height), thickness=2, color=self.elev_color)
+
+            # paths
+            for i in range(len(self.sunPath) - 1):
+                cv2.line(img=canvas, \
+                    pt1=(self.elev_X + int(i * self.res), \
+                        self.elev_Y + int(self.elev_height / 2.0) - self.sunPath[i][1]), \
+                    pt2=(self.elev_X + int((i + 1) * self.res), \
+                        self.elev_Y + int(self.elev_height / 2.0) - self.sunPath[i + 1][1]), \
+                    thickness=1, color=self.sun_color)
+                cv2.line(img=canvas, \
+                    pt1=(self.elev_X + int(i * self.res), \
+                        self.elev_Y + int(self.elev_height / 2.0) - self.moonPath[i][1]), \
+                    pt2=(self.elev_X + int((i + 1) * self.res), \
+                        self.elev_Y + int(self.elev_height / 2.0) - self.moonPath[i + 1][1]), \
+                    thickness=1, color=self.moon_color)
 
         if alpha < 1.0:
             tmpcanv = cv2.addWeighted(canvas, alpha, s.image, 1 - alpha, 0)
             s.image = tmpcanv
         else:
             s.image = canvas
-        #s.image = canvas
 
     def __init__(self, debug, params):
         self.get_params(debug, params)
         self.set_size(debug, params)
         self.set_time(debug, params)
         self.calculations(debug, params)
+        if params["draw_elev"] == True:
+            self.calSunMoon(params)
 
 def lightgraph(params, event):
     s.startModuleDebug("allsky_lightgraph")
@@ -563,6 +781,7 @@ def lightgraph(params, event):
     if enabled == 1:
         debug = params["debug"]
         drawer = lGraph(debug, params)
+
         drawer.draw(params)
         result ="Light Graph Complete"
     else:
