@@ -536,7 +536,9 @@ class lGraph():
         else:
             xx = self.graph_X
         
-        tri = np.array([[xx, self.graph_Y], [xx - 5, self.graph_Y - 8], [xx + 5, self.graph_Y - 8]])
+        tri = np.array([[xx, self.graph_Y + 8], [xx - 5, self.graph_Y], [xx + 5, self.graph_Y]])
+        cv2.fillPoly(img=canvas, pts=[tri], color=self.border_color)
+        tri = np.array([[xx, self.graph_Y + self.graph_height - 8], [xx - 5, self.graph_Y + self.graph_height], [xx + 5, self.graph_Y + self.graph_height]])
         cv2.fillPoly(img=canvas, pts=[tri], color=self.border_color)
 
 
