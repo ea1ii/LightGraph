@@ -28,8 +28,8 @@ metaData = {
         "night",
         "day"
     ],
-    "experimental": "true",
-    "version": "v0.2",
+    "experimental": "false",
+    "version": "v0.3",
     "module": "allsky_lightgraph",
     "arguments": {
         "night_border_color": "30 190 40",
