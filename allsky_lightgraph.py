@@ -452,6 +452,7 @@ class lGraph():
 
         ss = ephem.Sun()
 
+        # store in an array all next risings and settings, and transits
         self.location.horizon ='-18:0'
         try:
             raise_astro1 = self.location.next_rising(ephem.Sun()).datetime()
@@ -499,7 +500,7 @@ class lGraph():
 
         try:
             transit1 = self.location.next_transit(ephem.Sun()).datetime()
-            timeArray = self.timeArray + [(transit1, "Noon")]
+            self.timeArray = self.timeArray + [(transit1, "Noon")]
         except:
             pass
         try:
@@ -507,7 +508,8 @@ class lGraph():
             self.timeArray = self.timeArray + [(anti_transit1, "Midnight")]
         except:
             pass
-
+        
+        # of centered, add all previous risings and settings and transits
         if params["now_point"] == "Center":
             self.location.horizon ='-18:0'
             try:
@@ -565,23 +567,28 @@ class lGraph():
             except:
                 pass
 
+        # sort all events
         self.timeArray.sort()
 
+        # filter out events before start time or after end time
         while (self.timeArray[0])[0] < self.startTime:
             self.timeArray = self.timeArray[1:]
 
         while (self.timeArray[-1])[0] > self.finishTime:
             self.timeArray = self.timeArray[:-1]
 
+        # add start and end time events
         self.timeArray = [(self.startTime, "Start")] + self.timeArray + [(self.finishTime, "Finish")]
 
         ss = ephem.Sun()
         ss.compute(self.location)
         sun_elev = ss.alt
 
+        # get sun elevation half way through any two consecutive events
         for i in range(len(self.timeArray)):
             self.timeArray[i] = self.timeArray[i] + (int((self.timeArray[i][0] - self.startTime).total_seconds() / (self.finishTime - self.startTime).total_seconds() * self.graph_width),)
 
+        # remove and store separately the transits as the do not trigger a color change, bat draw a single line
         for moment in self.timeArray:
             if moment[1] == "Noon":
                 self.noon = moment
