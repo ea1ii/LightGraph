@@ -784,15 +784,11 @@ class lGraph():
 def lightgraph(params, event):
     s.startModuleDebug("allsky_lightgraph")
 
-    enabled = s.int(s.getEnvironmentVariable("AS_eOVERLAY"))
-    if enabled == 1:
-        debug = params["debug"]
-        drawer = lGraph(debug, params)
+    debug = params["debug"]
+    drawer = lGraph(debug, params)
 
-        drawer.draw(params)
-        result ="Light Graph Complete"
-    else:
-        result = "Light Graph Disabled"
+    drawer.draw(params)
+    result ="Light Graph Complete"
     
     s.log(1, "INFO {0}".format(result))
     return result
