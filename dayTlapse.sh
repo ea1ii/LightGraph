@@ -33,7 +33,7 @@ TODAY=$(date +%Y%m%d)
 # directory for the day images ('d')
 TODAY_DAY="${TODAY}d"
 
-TODAY_DIR = "${ALLSKY_IMAGES}/${TODAY}"
+TODAY_DIR="${ALLSKY_IMAGES}/${TODAY}"
 
 if [ -z "${TODAY_DIR}" ] ; then
     echo -e "${ME}: ${RED}ERROR: '${TODAY}' not found!${NC}"
@@ -41,15 +41,15 @@ if [ -z "${TODAY_DIR}" ] ; then
 fi
 
 # directory for the day images ('d')
-TODAY_DAY_DIR = "${TODAY_DIR}d"
+TODAY_DAY_DIR="${TODAY_DIR}d"
 
 if [[ ${TIMELAPSE} == "true" ]]; then
 
     # create the directory for day images a(and thumbnails)
     echo -e "${ME}: ===== Creating Day images directory for ${TODAY}"
     mkdir -p ${TODAY_DAY_DIR}/thumbnails
-    RET = $?
-    if [[ ${RET} = 0 ]]; then
+    RET=$?
+    if [[ ${RET} != 0 ]]; then
         echo -e "${ME}: ${RED}ERROR: Could not create directory"
         exit 2
     fi
@@ -57,8 +57,8 @@ if [[ ${TIMELAPSE} == "true" ]]; then
     # copy images up to now (day ones) to temp dir
     echo -e "${ME}: ===== Copying Day images for ${TODAY}"
     cp -r ${TODAY_DIR}/. ${TODAY_DAY_DIR}
-    RET = $?
-    if [[ ${RET} = 0 ]]; then
+    RET=$?
+    if [[ ${RET} != 0 ]]; then
         echo -e "${ME}: ${RED}ERROR: Could not copy images"
         exit 2
     fi
@@ -66,13 +66,13 @@ if [[ ${TIMELAPSE} == "true" ]]; then
     # generate day timelapse
     echo -e "${ME}: ===== Generating Day timelapse ${TODAY}"
     "${ALLSKY_SCRIPTS}/generateForDay.sh" -t "${TODAY_DAY}"
-    RET = $?
-    if [[ ${RET} = 0 ]]; then
+    RET=$?
+    if [[ ${RET} != 0 ]]; then
         echo -e "${ME}: ${RED}ERROR: Could not copy images"
         exit 2
     else
         echo -e "${ME}: ${RED} ===== Timelapse complete"
-        if [[ ${UPLOAD_VIDEO} == "true" ]]: then
+        if [[ ${UPLOAD_VIDEO} == "true" ]]; then
             # upload day timelapse
             "${ALLSKY_SCRIPTS}/generateForDay.sh" --upload -t "${TODAY_DAY}"
         fi
