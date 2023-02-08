@@ -6,10 +6,14 @@ ME="$(basename "${BASH_ARGV0}")"
 # line 339... added
 #
 # $suf = substr($file, $file_prefix_len + 9, 1);
-# if ($suf === "d") {  
-#   $segment = "<i>(day)</i>";
+# if ($title === "Timelapse Videos") {
+#   if ($suf === "d") {  
+#       $segment = "<i>(day)</i>";
+#   } else {
+#       $segment = "<b>(night)</b>";
+#   }
 # } else {
-#   $segment = "<b>(night)</b>";
+#   $segment = "";
 # }
 #
 # down 2 lines changed

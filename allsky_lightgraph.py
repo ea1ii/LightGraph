@@ -773,6 +773,41 @@ class lGraph():
         else:
             s.image = canvas
 
+    def exportData(self):
+        sun = ephem.Sun()
+
+        t = datetime.datetime.utcnow()
+        self.location.horizon = 0
+
+        self.location.date = ephem.Date(t)
+
+        sun.compute(self.location)
+        sun_alt = "{:.3f}".format(degrees(sun.alt))
+        sun_az = "{:.3f}".format(degrees(sun.az))
+
+        self.location.date = ephem.Date(self.startTime)
+
+        moon_trans = self.location.next_transit(ephem.Moon()).datetime().time().strftime("%H:%M")
+        moon_atran = self.location.next_antitransit(ephem.Moon()).datetime().time().strftime("%H:%M")
+        moon_rise = self.location.next_rising(ephem.Moon()).datetime().time().strftime("%H:%M")
+        moon_set = self.location.next_setting(ephem.Moon()).datetime().time().strftime("%H:%M")
+        
+        sun.compute(self.location)
+        sun_trans = self.location.next_transit(ephem.Sun()).datetime().time().strftime("%H:%M")
+        sun_atran = self.location.next_antitransit(ephem.Sun()).datetime().time().strftime("%H:%M")
+
+        os.environ["AS_SUN_ALT"] = str(sun_alt)
+        os.environ["AS_SUN_AZ"] = str(sun_az)
+
+        os.environ["AS_MOON_TRANSIT"] = str(moon_trans)
+        os.environ["AS_MOON_ANTITRANSIT"] = str(moon_atran)
+        os.environ["AS_MOONRISE"] = str(moon_rise)
+        os.environ["AS_MOONSET"] = str(moon_set)
+
+        os.environ["AS_SUN_NOON"] = str(sun_trans)
+        os.environ["AS_SUN_MIDNIGHT"] = str(sun_atran)
+
+
     def __init__(self, debug, params):
         self.get_params(debug, params)
         self.set_size(debug, params)
@@ -786,7 +821,7 @@ def lightgraph(params, event):
 
     debug = params["debug"]
     drawer = lGraph(debug, params)
-
+    drawer.exportData()
     drawer.draw(params)
     result ="Light Graph Complete"
     
