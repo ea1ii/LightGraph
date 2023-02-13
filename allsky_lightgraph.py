@@ -379,7 +379,7 @@ class lGraph():
         self.latitude = s.convertLatLon(s.getSetting("latitude"))
         self.longitude = s.convertLatLon(s.getSetting("longitude"))
 
-        self.textSize = float(params["text_size"]) / 10.0
+        self.textSize = int(params["text_size"]) / 10.0
 
         if params["draw_elev"] == True:
             if isDay == "DAY":
@@ -404,7 +404,7 @@ class lGraph():
             self.graph_width = self.image_width
             self.graph_X = 0
             if debug:
-                s.log(1,"Witdth truncated")
+                s.log(1,"Width truncated")
         
         if center:
             self.graph_X = int((self.image_width - self.graph_width) / 2)
