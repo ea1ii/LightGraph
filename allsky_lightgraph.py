@@ -29,7 +29,7 @@ metaData = {
         "day"
     ],
     "experimental": "false",
-    "version": "v0.3",
+    "version": "v0.4",
     "module": "allsky_lightgraph",
     "arguments": {
         "night_border_color": "30 190 40",
@@ -46,7 +46,7 @@ metaData = {
         "horiz_center": "true",
         "hour_ticks": "true",
         "hour_nums": "true",
-        "text_size": 3,
+        "hour_txt_size": 0.5,
         "now_point": "Center",
         "draw_elev": "true",
         "elev_night_color": "30 190 40",
@@ -196,17 +196,17 @@ metaData = {
                 "fieldtype": "checkbox"
             }
         },
-        "text_size": {
+        "hour_txt_size": {
             "required": "true",
-            "description": "Font scale factor for hour numbers",
-            "help": "",
+            "description": "Hour text font scale",
+            "help": "Hours to be skipped over if too big and close",
             "type": {
                 "fieldtype": "spinner",
-                "min": 1,
-                "max": 20,
-                "step": 1
+                "min": 0.1,
+                "max": 2.0,
+                "step": 0.1
             }
-        },
+        },	 
         "now_point": {
             "required": "true",
             "description": "Now is aligned to the center or to the left",
@@ -378,8 +378,6 @@ class lGraph():
 
         self.latitude = s.convertLatLon(s.getSetting("latitude"))
         self.longitude = s.convertLatLon(s.getSetting("longitude"))
-
-        self.textSize = int(params["text_size"]) / 10.0
 
         if params["draw_elev"] == True:
             if isDay == "DAY":
@@ -656,6 +654,8 @@ class lGraph():
 
     def draw (self, params):
         alpha = float(params["alpha"])
+        textSize = float(params["hour_txt_size"])
+        
         canvas = s.image
         if alpha < 1.0:
             canvas = s.image.copy()
@@ -697,28 +697,28 @@ class lGraph():
 
         # hour ticks
         if params["hour_ticks"] == True:
-            tickSize = self.graph_height / 5
+            tickSize = int(self.graph_height / 5)
             tt = self.startTime.replace(second=0, minute=0, microsecond=0)
             xx = (tt - self.startTime).total_seconds() / 3600.0 / 24.0 * self.graph_width + self.graph_X
             hourdelta = self.graph_width / 24.0
             yy = self.graph_Y
             font = cv2.FONT_HERSHEY_SIMPLEX
             #if params["hour_nums"] == "true":
-            h = tt.hour               
+            h = tt.hour
+            skipHour = False               
             for x in range(25):
-                skipHour = False
                 xxx = int(xx + x * hourdelta)
                 if xxx > self.graph_X and xxx < self.graph_X + self.graph_width:
-                    cv2.line(img=canvas, pt1=(xxx, self.graph_Y), pt2=(xxx, self.graph_Y - tickSize), thickness=1, color=self.border_color)
+                    cv2.line(img=canvas, pt1=(xxx, self.graph_Y), pt2=(xxx, self.graph_Y - tickSize), thickness=2, color=self.border_color)
                     if params["hour_nums"] == True:
-                        textSz = cv2.getTextSize(str(h).zfill(2), font, self.textSize, 1)[0]
+                        textSz = cv2.getTextSize(str(h).zfill(2), font, textSize, 1)[0]
                         textX = xxx - int(textSz[0] / 2.0)
                         if skipHour:
                             skipHour = False
-                        if (textSz > hourdelta) and not skipHour:
+                        elif textSz[0] > hourdelta:
                             skipHour = True
                         if not skipHour:
-                            cv2.putText(canvas, str(h).zfill(2), (textX, self.graph_Y - 5), font, self.textSize, self.border_color, 1, cv2.LINE_AA)
+                            cv2.putText(canvas, str(h).zfill(2), (textX, self.graph_Y - tickSize - 1), font, textSize, self.border_color, 1, cv2.LINE_AA)
                 h = h + 1
                 if h == 24:
                     h = 0
@@ -797,7 +797,7 @@ class lGraph():
     def exportData(self):
         sun = ephem.Sun()
 
-        t = datetime.datetime.utcnow()
+        t = datetime.datetime.now()
         self.location.horizon = 0
 
         self.location.date = ephem.Date(t)
@@ -818,7 +818,7 @@ class lGraph():
         sun_atran = self.location.next_antitransit(ephem.Sun()).datetime().time().strftime("%H:%M")
 
         moon = ephem.Moon()
-        age = moon.age()
+        #age = moon.age()
 
         os.environ["AS_SUN_ALT"] = str(sun_alt)
         os.environ["AS_SUN_AZ"] = str(sun_az)
