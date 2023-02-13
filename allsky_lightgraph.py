@@ -379,7 +379,7 @@ class lGraph():
         self.latitude = s.convertLatLon(s.getSetting("latitude"))
         self.longitude = s.convertLatLon(s.getSetting("longitude"))
 
-        self.textSize = params["text_size"] / 10.0
+        self.textSize = float(params["text_size"]) / 10.0
 
         if params["draw_elev"] == True:
             if isDay == "DAY":
