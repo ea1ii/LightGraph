@@ -46,6 +46,7 @@ metaData = {
         "horiz_center": "true",
         "hour_ticks": "true",
         "hour_nums": "true",
+        "text_size": 3,
         "now_point": "Center",
         "draw_elev": "true",
         "elev_night_color": "30 190 40",
@@ -195,6 +196,17 @@ metaData = {
                 "fieldtype": "checkbox"
             }
         },
+        "text_size": {
+            "required": "true",
+            "description": "Font scale factor for hour numbers",
+            "help": "",
+            "type": {
+                "fieldtype": "spinner",
+                "min": 1,
+                "max": 20,
+                "step": 1
+            }
+        },
         "now_point": {
             "required": "true",
             "description": "Now is aligned to the center or to the left",
@@ -337,7 +349,7 @@ class lGraph():
     graph_X = graph_Y = graph_width = graph_height = 0
     elev_X = elev_Y = elev_width = elev_height = 0
     npoints = res = 0
-    startTime = finishTime = nowTime = datetime.datetime.utcnow()
+    startTime = finishTime = nowTime = datetime.datetime.now()
     midnight = noon = None
     location = None
     timeArray = []
@@ -366,6 +378,8 @@ class lGraph():
 
         self.latitude = s.convertLatLon(s.getSetting("latitude"))
         self.longitude = s.convertLatLon(s.getSetting("longitude"))
+
+        self.textSize = params["text_size"] / 10.0
 
         if params["draw_elev"] == True:
             if isDay == "DAY":
@@ -683,6 +697,7 @@ class lGraph():
 
         # hour ticks
         if params["hour_ticks"] == True:
+            tickSize = self.graph_height / 5
             tt = self.startTime.replace(second=0, minute=0, microsecond=0)
             xx = (tt - self.startTime).total_seconds() / 3600.0 / 24.0 * self.graph_width + self.graph_X
             hourdelta = self.graph_width / 24.0
@@ -691,13 +706,19 @@ class lGraph():
             #if params["hour_nums"] == "true":
             h = tt.hour               
             for x in range(25):
+                skipHour = False
                 xxx = int(xx + x * hourdelta)
                 if xxx > self.graph_X and xxx < self.graph_X + self.graph_width:
-                    cv2.line(img=canvas, pt1=(xxx, self.graph_Y), pt2=(xxx, self.graph_Y - 3), thickness=1, color=self.border_color)
+                    cv2.line(img=canvas, pt1=(xxx, self.graph_Y), pt2=(xxx, self.graph_Y - tickSize), thickness=1, color=self.border_color)
                     if params["hour_nums"] == True:
-                        textSz = cv2.getTextSize(str(h).zfill(2), font, 0.3, 1)[0]
+                        textSz = cv2.getTextSize(str(h).zfill(2), font, self.textSize, 1)[0]
                         textX = xxx - int(textSz[0] / 2.0)
-                        cv2.putText(canvas, str(h).zfill(2), (textX, self.graph_Y - 5), font, 0.3, self.border_color, 1, cv2.LINE_AA)
+                        if skipHour:
+                            skipHour = False
+                        if (textSz > hourdelta) and not skipHour:
+                            skipHour = True
+                        if not skipHour:
+                            cv2.putText(canvas, str(h).zfill(2), (textX, self.graph_Y - 5), font, self.textSize, self.border_color, 1, cv2.LINE_AA)
                 h = h + 1
                 if h == 24:
                     h = 0
@@ -795,6 +816,9 @@ class lGraph():
         sun.compute(self.location)
         sun_trans = self.location.next_transit(ephem.Sun()).datetime().time().strftime("%H:%M")
         sun_atran = self.location.next_antitransit(ephem.Sun()).datetime().time().strftime("%H:%M")
+
+        moon = ephem.Moon()
+        age = moon.age()
 
         os.environ["AS_SUN_ALT"] = str(sun_alt)
         os.environ["AS_SUN_AZ"] = str(sun_az)
