@@ -327,7 +327,7 @@ metaData = {
                 "step": 1
             }
         },
-        "debug": {
+       "debug": {
             "required": "false",
             "description": "Enable debug mode",
             "help": "If selected image will not be updated but stored in allsky tmp debug folder",
