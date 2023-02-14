@@ -451,6 +451,7 @@ class lGraph():
             self.finishTimeUTC = self.nowTimeUTC + datetime.timedelta(hours=24)
 
     def _convertLatLon(self, input):
+        # convert latitude or longitude to ephem format
         v = input
         g = int(v)
         v = v - g
@@ -588,24 +589,24 @@ class lGraph():
         self.timeArray.sort()
 
         # filter out events before start time or after end time
-        while (self.timeArray[0])[0] < self.startTime:
+        while (self.timeArray[0])[0] < self.startTimeUTC:
             self.timeArray = self.timeArray[1:]
 
-        while (self.timeArray[-1])[0] > self.finishTime:
+        while (self.timeArray[-1])[0] > self.finishTimeUTC:
             self.timeArray = self.timeArray[:-1]
 
         # add start and end time events
-        self.timeArray = [(self.startTime, "Start")] + self.timeArray + [(self.finishTime, "Finish")]
+        self.timeArray = [(self.startTimeUTC, "Start")] + self.timeArray + [(self.finishTimeUTC, "Finish")]
 
         ss = ephem.Sun()
         ss.compute(self.location)
         sun_elev = ss.alt
 
-        # get sun elevation half way through any two consecutive events
+        # add to wech element datetime scaled to rectangle X coordinate
         for i in range(len(self.timeArray)):
             self.timeArray[i] = self.timeArray[i] + (int((self.timeArray[i][0] - self.startTime).total_seconds() / (self.finishTime - self.startTime).total_seconds() * self.graph_width),)
 
-        # remove and store separately the transits as the do not trigger a color change, bat draw a single line
+        # remove and store separately the transits as the do not trigger a color change, but draw a single line
         for moment in self.timeArray:
             if moment[1] == "Noon":
                 self.noon = moment
@@ -613,7 +614,7 @@ class lGraph():
             if moment[1] == "Midnight":
                 self.midnight = moment
                 self.timeArray.remove(moment)
-        for moment in self.timeArray:
+        for moment in self.timeArray: # not sure yey if an extra check is really necessary, probably not
             if moment[1] == "Noon":
                 self.noon = moment
                 self.timeArray.remove(moment)
@@ -622,14 +623,14 @@ class lGraph():
                 self.timeArray.remove(moment)     
 
     def calSunMoon(self, params):
-        k = 3
+        k = 3 # k is the precission for moon-solar plot in pixels
         self.npoints = int(self.elev_width / k) + 1
         self.res = self.elev_width / self.npoints
         delta_t = 24.0 * 3600.0 / self.npoints
         sun = ephem.Sun()
         moon = ephem.Moon()
         for x in range(self.npoints + 1):
-            xt = self.startTime + datetime.timedelta(seconds=x * delta_t)
+            xt = self.startTimeUTC + datetime.timedelta(seconds=x * delta_t)
             self.location.date = ephem.Date(xt)
             sun.compute(self.location)
             self.sunPath = self.sunPath + [(x * self.res, int(degrees(sun.alt) / 90.0 * self.elev_height / 2.0))]
@@ -645,15 +646,15 @@ class lGraph():
         sun.compute(loc)
         a = degrees(sun.alt)
         if a < -18.0:
-            drk = 0
+            drk = 0 # night
         elif a < -12.0:
-            drk = 1
+            drk = 1 # astronomical
         elif a < -6.0:
-            drk = 2
+            drk = 2 # nautical
         elif a < 0.0:
-            drk = 3
+            drk = 3 # civil
         else:
-            drk = 4
+            drk = 4 # day
 
         return drk
 
@@ -663,7 +664,7 @@ class lGraph():
         
         canvas = s.image
         if alpha < 1.0:
-            canvas = s.image.copy()
+            canvas = s.image.copy() # if transparency, work on a copy
         else:
             canvas = s.image
 
@@ -682,7 +683,8 @@ class lGraph():
             else:
                 col = self.light_color
 
-            cv2.rectangle(img=canvas, pt1=(self.graph_X + self.timeArray[i][2], self.graph_Y), \
+            cv2.rectangle(img=canvas, \
+                pt1=(self.graph_X + self.timeArray[i][2], self.graph_Y), \
                 pt2=(self.graph_X + self.timeArray[i + 1][2], self.graph_Y + self.graph_height), \
                 color=col, thickness=cv2.FILLED)
 
@@ -703,40 +705,40 @@ class lGraph():
         # hour ticks
         if params["hour_ticks"] == True:
             tickSize = int(self.graph_height / 5)
-            tt = self.startTime.replace(second=0, minute=0, microsecond=0)
-            xx = (tt - self.startTime).total_seconds() / 3600.0 / 24.0 * self.graph_width + self.graph_X
-            hourdelta = self.graph_width / 24.0
+            firstIntHourTime = self.startTime.replace(second=0, minute=0, microsecond=0) # everything is calculated in UTC, but this is local
+            startingX = -(self.startTime - firstIntHourTime).total_seconds() / 3600.0 / 24.0 * self.graph_width + self.graph_X
+            hourdeltaPx = self.graph_width / 24.0
+
             yy = self.graph_Y
             font = cv2.FONT_HERSHEY_SIMPLEX
-            #if params["hour_nums"] == "true":
-            h = tt.hour
+            onlyHour = firstIntHourTime.hour
             skipHour = False               
-            for x in range(25):
-                xxx = int(xx + x * hourdelta)
-                if xxx > self.graph_X and xxx < self.graph_X + self.graph_width:
-                    cv2.line(img=canvas, pt1=(xxx, self.graph_Y), pt2=(xxx, self.graph_Y - tickSize), thickness=2, color=self.border_color)
+            for i in range(26):
+                xPos = int(startingX + i * hourdeltaPx)
+                if xPos > self.graph_X and xPos < self.graph_X + self.graph_width:
+                    cv2.line(img=canvas, pt1=(xPos, self.graph_Y), pt2=(xPos, self.graph_Y - tickSize), thickness=2, color=self.border_color)
                     if params["hour_nums"] == True:
-                        textSz = cv2.getTextSize(str(h).zfill(2), font, textSize, 1)[0]
-                        textX = xxx - int(textSz[0] / 2.0)
+                        textSz = cv2.getTextSize(str(onlyHour).zfill(2), font, textSize, 1)[0]
+                        textX = xPos - int(textSz[0] / 2.0)
                         if skipHour:
                             skipHour = False
-                        elif textSz[0] > hourdelta:
+                        elif textSz[0] > hourdeltaPx:
                             skipHour = True
                         if not skipHour:
-                            cv2.putText(canvas, str(h).zfill(2), (textX, self.graph_Y - tickSize - 1), font, textSize, self.border_color, 1, cv2.LINE_AA)
-                h = h + 1
-                if h == 24:
-                    h = 0
+                            cv2.putText(canvas, str(onlyHour).zfill(2), (textX, self.graph_Y - tickSize - 1), font, textSize, self.border_color, 1, cv2.LINE_AA)
+                onlyHour = onlyHour + 1
+                if onlyHour == 24:
+                    onlyHour = 0
 
         # now mark
         if params["now_point"] == "Center":
-            xx = int(self.graph_X + self.graph_width / 2.0)
+            startingX = int(self.graph_X + self.graph_width / 2.0)
         else:
-            xx = self.graph_X
+            startingX = self.graph_X
         
-        tri = np.array([[xx, self.graph_Y + 8], [xx - 5, self.graph_Y], [xx + 5, self.graph_Y]])
+        tri = np.array([[startingX, self.graph_Y + 8], [startingX - 5, self.graph_Y], [startingX + 5, self.graph_Y]])
         cv2.fillPoly(img=canvas, pts=[tri], color=self.border_color)
-        tri = np.array([[xx, self.graph_Y + self.graph_height - 8], [xx - 5, self.graph_Y + self.graph_height], [xx + 5, self.graph_Y + self.graph_height]])
+        tri = np.array([[startingX, self.graph_Y + self.graph_height - 8], [startingX - 5, self.graph_Y + self.graph_height], [startingX + 5, self.graph_Y + self.graph_height]])
         cv2.fillPoly(img=canvas, pts=[tri], color=self.border_color)
 
         #elev chart
@@ -759,24 +761,24 @@ class lGraph():
                                 pt2=(self.elev_X + self.elev_width, self.elev_Y + int(self.elev_height / 2 + TROPIC * self.elev_height / 180.0)), thickness=1, color=self.elev_color)
             
             # hours
-            xx = (tt - self.startTime).total_seconds() / 3600.0 / 24.0 * self.elev_width + self.elev_X
-            hourdelta = self.elev_width / 24.0
+            startingX = (firstIntHourTime - self.startTime).total_seconds() / 3600.0 / 24.0 * self.elev_width + self.elev_X
+            hourdeltaPx = self.elev_width / 24.0
             yy = self.elev_Y
-            h = tt.hour               
-            for x in range(25):
-                xxx = int(xx + x * hourdelta)
-                if xxx > self.elev_X and xxx < self.elev_X + self.elev_width:
-                    cv2.line(img=canvas, pt1=(xxx, self.elev_Y), pt2=(xxx, self.elev_Y + self.elev_height), thickness=1, color=self.elev_color)
-                h = h + 1
-                if h == 24:
-                    h = 0
+            onlyHour = firstIntHourTime.hour               
+            for i in range(25):
+                xPos = int(startingX + i * hourdeltaPx)
+                if xPos > self.elev_X and xPos < self.elev_X + self.elev_width:
+                    cv2.line(img=canvas, pt1=(xPos, self.elev_Y), pt2=(xPos, self.elev_Y + self.elev_height), thickness=1, color=self.elev_color)
+                onlyHour = onlyHour + 1
+                if onlyHour == 24:
+                    onlyHour = 0
 
             # mark
             if params["now_point"] == "Center":
-                xx = self.elev_X+ int(self.elev_width / 2)
+                startingX = self.elev_X+ int(self.elev_width / 2)
             else:
-                xx = self.elev_X 
-            cv2.line(img=canvas, pt1=(xx, self.elev_Y), pt2=(xx, self.elev_Y + self.elev_height), thickness=2, color=self.elev_color)
+                startingX = self.elev_X 
+            cv2.line(img=canvas, pt1=(startingX, self.elev_Y), pt2=(startingX, self.elev_Y + self.elev_height), thickness=2, color=self.elev_color)
 
             # paths
             for i in range(len(self.sunPath) - 1):
