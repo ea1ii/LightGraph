@@ -350,6 +350,7 @@ class lGraph():
     elev_X = elev_Y = elev_width = elev_height = 0
     npoints = res = 0
     startTime = finishTime = nowTime = datetime.datetime.now()
+    startTimeUTC = finishTimeUTC = nowTimeUTC = datetime.datetime.utcnow()
     midnight = noon = None
     location = None
     timeArray = []
@@ -441,9 +442,13 @@ class lGraph():
         if params["now_point"] == "Center":
             self.startTime = self.nowTime - datetime.timedelta(hours=12)
             self.finishTime = self.nowTime + datetime.timedelta(hours=12)
+            self.startTimeUTC = self.nowTimeUTC - datetime.timedelta(hours=12)
+            self.finishTimeUTC = self.nowTimeUTC + datetime.timedelta(hours=12)
         else:
             self.startTime = self.nowTime
             self.finishTime = self.nowTime + datetime.timedelta(hours=24)
+            self.startTimeUTC = self.nowTimeUTC
+            self.finishTimeUTC = self.nowTimeUTC + datetime.timedelta(hours=24)
 
     def _convertLatLon(self, input):
         v = input
@@ -460,7 +465,7 @@ class lGraph():
         self.location = ephem.Observer()
         self.location.lat = self._convertLatLon(self.latitude)
         self.location.lon = self._convertLatLon(self.longitude)
-        self.location.date = ephem.Date(self.nowTime)
+        self.location.date = ephem.Date(self.nowTimeUTC)
 
         ss = ephem.Sun()
 
@@ -795,9 +800,10 @@ class lGraph():
             s.image = canvas
 
     def exportData(self):
+        # this is temporary until allsky exports all relevant datetimes
         sun = ephem.Sun()
 
-        t = datetime.datetime.now()
+        t = datetime.datetime.utcnow()
         self.location.horizon = 0
 
         self.location.date = ephem.Date(t)
@@ -808,16 +814,17 @@ class lGraph():
 
         self.location.date = ephem.Date(self.startTime)
 
-        moon_trans = self.location.next_transit(ephem.Moon()).datetime().time().strftime("%H:%M")
-        moon_atran = self.location.next_antitransit(ephem.Moon()).datetime().time().strftime("%H:%M")
-        moon_rise = self.location.next_rising(ephem.Moon()).datetime().time().strftime("%H:%M")
-        moon_set = self.location.next_setting(ephem.Moon()).datetime().time().strftime("%H:%M")
+        moon = ephem.Moon()
+        moon.compute(self.location)
+        moon_trans = ephem.localtime(self.location.next_transit(ephem.Moon())).time().strftime("%H:%M")
+        moon_atran = ephem.localtime(self.location.next_antitransit(ephem.Moon())).time().strftime("%H:%M")
+        moon_rise = ephem.localtime(self.location.next_rising(ephem.Moon())).time().strftime("%H:%M")
+        moon_set = ephem.localtime(self.location.next_setting(ephem.Moon())).time().strftime("%H:%M")
         
         sun.compute(self.location)
-        sun_trans = self.location.next_transit(ephem.Sun()).datetime().time().strftime("%H:%M")
-        sun_atran = self.location.next_antitransit(ephem.Sun()).datetime().time().strftime("%H:%M")
-
-        moon = ephem.Moon()
+        sun_trans = ephem.localtime(self.location.next_transit(ephem.Sun())).time().strftime("%H:%M")
+        sun_atran = ephem.localtime(self.location.next_antitransit(ephem.Sun())).time().strftime("%H:%M")
+        
         #age = moon.age()
 
         os.environ["AS_SUN_ALT"] = str(sun_alt)
