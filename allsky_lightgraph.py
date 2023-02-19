@@ -29,7 +29,7 @@ metaData = {
         "day"
     ],
     "experimental": "false",
-    "version": "v0.4",
+    "version": "v0.6",
     "module": "allsky_lightgraph",
     "arguments": {
         "night_border_color": "30 190 40",
@@ -602,9 +602,9 @@ class lGraph():
         ss.compute(self.location)
         sun_elev = ss.alt
 
-        # add to wech element datetime scaled to rectangle X coordinate
+        # add to each element datetime scaled to rectangle X coordinate
         for i in range(len(self.timeArray)):
-            self.timeArray[i] = self.timeArray[i] + (int((self.timeArray[i][0] - self.startTime).total_seconds() / (self.finishTime - self.startTime).total_seconds() * self.graph_width),)
+            self.timeArray[i] = self.timeArray[i] + (int((self.timeArray[i][0] - self.startTimeUTC).total_seconds() / (self.finishTimeUTC - self.startTimeUTC).total_seconds() * self.graph_width),)
 
         # remove and store separately the transits as the do not trigger a color change, but draw a single line
         for moment in self.timeArray:
