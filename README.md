@@ -29,8 +29,7 @@ Transparecy can also be selected.
 
 Hourly tickmarks can be displayed. Hour numbers as well. If hour tickmarcks are disabled, hour numbers setting will be ignored.
 
-Text scale can also be selected. If the text is so big as to overlap at a given
-graph width, only every other hour number will be deisplayed.
+Text scale can also be selected. If the text is so big as to overlap at a given graph width, only every other hour number will be deisplayed.
 
 Two thin lines mark sun transit (noon) and anti-transit (midnight).
 
@@ -46,4 +45,16 @@ If center is selected then the display covers from 12 hours before current time 
 An extra feature had been added: a chart showing Sun and Moon elevation.
 
 It shares the timebase with the light graph. But has an specific set of parameters for: enabling/didabling this feature, position, size and colors.
+Vertical grid spacing is every hour. Horizontal grid matches tropics and 
+por circles latitudes.
 
+# Additional feature
+
+At the moment, and for my convenience the script exports these variables:
+AS_SUN_ALT, AS_SUN_AZ
+AS_MOON_TRANSIT, AS_MOON_ANTITRANSIT, AS_MOONRISE, AS_MOONSET
+AS_SUN_NOON, AS_SUN_MIDNIGHT
+
+They will be removed when AllSky supplies this data.
+
+Thanks and enjoy!

@@ -47,6 +47,8 @@ metaData = {
         "hour_ticks": "true",
         "hour_nums": "true",
         "hour_txt_size": 0.5,
+        "night_text_color": "30 190 40",
+        "day_text_color": "15 110 20",
         "now_point": "Center",
         "draw_elev": "true",
         "elev_night_color": "30 190 40",
@@ -207,6 +209,24 @@ metaData = {
                 "step": 0.1
             }
         },	 
+        "night_text_color": {
+            "required": "true",
+            "description": "Color for text in night images",
+            "help": "BGR format",
+            "tab": "Colors",
+            "type": {
+                "fieldtype": ""
+            }
+        },
+        "day_text_color": {
+            "required": "true",
+            "description": "Color for text in day images",
+            "help": "BGR format",
+            "tab": "Colors",
+            "type": {
+                "fieldtype": ""
+            }
+        },
         "now_point": {
             "required": "true",
             "description": "Now is aligned to the center or to the left",
@@ -342,7 +362,7 @@ metaData = {
 
 class lGraph():
 
-    border_color = light_color = dark_color = None
+    border_color = light_color = dark_color = text_color =None
     day2civil_color = civil2nauti_color = nauti2astro_color = None
     elev_color = sun_solor = moon_color = None
     latitude = longitude = 0
@@ -368,10 +388,12 @@ class lGraph():
             self.border_color = self._readColor(params["day_border_color"])
             self.light_color = self._readColor(params["day_light_color"])
             self.dark_color = self._readColor(params["day_dark_color"])
+            self.text_color = self._readColor(params["day_text_color"])
         else:
             self.border_color = self._readColor(params["night_border_color"])
             self.light_color = self._readColor(params["night_light_color"])
             self.dark_color = self._readColor(params["night_dark_color"])
+            self.text_color = self._readColor(params["night_text_color"])
 
         self.day2civil_color = self._scaleColor(self.light_color, self.dark_color, 0.75)
         self.civil2nauti_color = self._scaleColor(self.light_color, self.dark_color, 0.50)
@@ -725,7 +747,7 @@ class lGraph():
                         elif textSz[0] > hourdeltaPx:
                             skipHour = True
                         if not skipHour:
-                            cv2.putText(canvas, str(onlyHour).zfill(2), (textX, self.graph_Y - tickSize - 1), font, textSize, self.border_color, 1, cv2.LINE_AA)
+                            cv2.putText(canvas, str(onlyHour).zfill(2), (textX, self.graph_Y - tickSize - 1), font, textSize, self.text_color, 1, cv2.LINE_AA)
                 onlyHour = onlyHour + 1
                 if onlyHour == 24:
                     onlyHour = 0
