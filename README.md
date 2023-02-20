@@ -1,5 +1,10 @@
+<<<<<<< HEAD
 # LightGraph 
 #LightGraph AllSky module
+=======
+# LightGraph ![https://www.paypal.com/donate/?hosted_button_id=ZTEN6YGU2E7QC](https://www.paypalobjects.com/en_GB/i/btn/btn_donate_SM.gif)
+LightGraph AllSky module <input type="image" src="https://www.paypalobjects.com/en_GB/i/btn/btn_donate_SM.gif" border="0" name="submit" title="PayPal - The safer, easier way to pay online!" alt="Donate with PayPal button" />
+>>>>>>> 6767ebd468fcaecd12fd03301cbb4ccdf0e43f2d
 
 LightGraph is a AllSky module that overlays on the image captured a graph displaying lightness and darkeness for the day (see below, for what a 'day' means).
 
@@ -29,8 +34,11 @@ Transparecy can also be selected.
 
 Hourly tickmarks can be displayed. Hour numbers as well. If hour tickmarcks are disabled, hour numbers setting will be ignored.
 
+<<<<<<< HEAD
 Text scale can also be selected. If the text is so big as to overlap at a given graph width, only every other hour number will be deisplayed.
 
+=======
+>>>>>>> 6767ebd468fcaecd12fd03301cbb4ccdf0e43f2d
 Two thin lines mark sun transit (noon) and anti-transit (midnight).
 
 ## Now Time
@@ -40,6 +48,7 @@ A small cursor points to the current time. The user can select left or center al
 If left is selected the the display covers 24 hours starting the current time.
 If center is selected then the display covers from 12 hours before current time util 12 hours after current time.
 
+<<<<<<< HEAD
 # Elevation Grid
 
 An extra feature had been added: a chart showing Sun and Moon elevation.
@@ -58,3 +67,5 @@ AS_SUN_NOON, AS_SUN_MIDNIGHT
 They will be removed when AllSky supplies this data.
 
 Thanks and enjoy!
+=======
+>>>>>>> 6767ebd468fcaecd12fd03301cbb4ccdf0e43f2d
