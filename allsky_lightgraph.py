@@ -836,7 +836,7 @@ class lGraph():
         sun_alt = "{:.3f}".format(degrees(sun.alt))
         sun_az = "{:.3f}".format(degrees(sun.az))
 
-        self.location.date = ephem.Date(self.startTime)
+        #self.location.date = ephem.Date(self.startTime)
 
         moon = ephem.Moon()
         moon.compute(self.location)
@@ -858,6 +858,7 @@ class lGraph():
         os.environ["AS_MOON_ANTITRANSIT"] = str(moon_atran)
         os.environ["AS_MOONRISE"] = str(moon_rise)
         os.environ["AS_MOONSET"] = str(moon_set)
+        #os.environ["AS_MOONAGE"] = str(age)
 
         os.environ["AS_SUN_NOON"] = str(sun_trans)
         os.environ["AS_SUN_MIDNIGHT"] = str(sun_atran)
